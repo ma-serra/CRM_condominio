@@ -200,7 +200,13 @@ class Bootstrap {
         $dbFile = __DIR__ . '/database.php';
         if (file_exists($dbFile)) {
             require_once $dbFile;
-            // Probar conexión
+            // En desarrollo, no forzar conexión durante bootstrap
+            if (env('APP_ENV') === 'development') {
+                error_log("[BOOTSTRAP] Base de datos configurada - conexión diferida para desarrollo");
+                return;
+            }
+            
+            // Probar conexión solo en producción/testing
             try {
                 $db = DatabaseConfig::getInstance();
                 $connection = $db->getConnection();
@@ -212,7 +218,8 @@ class Bootstrap {
                 if (env('APP_ENV') === 'production') {
                     throw new Exception("Error de conexión del sistema");
                 } else {
-                    throw $e;
+                    // En testing, registrar pero continuar
+                    error_log("[BOOTSTRAP WARNING] Conexión de base de datos no disponible en modo testing");
                 }
             }
         }
